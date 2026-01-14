@@ -14,7 +14,9 @@ const config = {
     tgChatId: process.env.TG_CHAT_ID,
     lineAccessToken: process.env.LINE_ACCESS_TOKEN,
     lineUserId: process.env.LINE_USER_ID,
-    cronSchedule: process.env.CRON_SCHEDULE || '*/10 * * * *'
+    cronSchedule: process.env.CRON_SCHEDULE || '*/10 * * * *',
+    subscribePassword: process.env.SUBSCRIBE_PASSWORD || '123456',
+    usersFile: './users.json',
 };
 
 // 簡單的啟動檢查

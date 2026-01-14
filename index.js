@@ -3,6 +3,7 @@ const cheerio = require('cheerio');
 const fs = require('fs-extra');
 const cron = require('node-cron');
 const { createWorker } = require('tesseract.js'); // 新增引用
+const { Telegraf } = require('telegraf'); // 新增：引入 Telegraf
 
 const config = require('./config');
 const { getHash, preprocessImage, runOCR } = require('./utils');
@@ -12,9 +13,56 @@ const apiClient = axios.create({ timeout: 20000 }); // 監控用的超時較長
 
 fs.ensureDirSync(config.imageDir);
 
+const bot = new Telegraf(config.tgToken);
+
+bot.start(async (ctx) => {
+    const chatId = ctx.chat.id;
+    const messageText = ctx.message.text || ''; 
+    const args = messageText.split(' ');
+    const userEnteredPassword = args[1]; // 取得 /start 後面的參數
+
+    // --- 密碼驗證 ---
+    if (userEnteredPassword !== config.subscribePassword) {
+        return ctx.reply(
+            `⚠️ 驗證失敗！此機器人僅供授權用戶使用。\n\n` +
+            `請向管理員索取密碼，並使用以下格式重新啟動：\n` +
+            `<code>/start 你的密碼</code>`,
+            { parse_mode: 'HTML' }
+        );
+    }
+
+    // --- 執行訂閱 ---
+    try {
+        let users = [];
+        if (await fs.exists(config.usersFile)) {
+            users = await fs.readJson(config.usersFile);
+        }
+
+        if (!users.includes(chatId)) {
+            users.push(chatId);
+            await fs.writeJson(config.usersFile, users);
+            ctx.reply('🎉 驗證成功！你已加入訂閱名單，當有名單更新時我會第一時間通知你。');
+            console.log(`👤 新訂閱者已加入: ${chatId} (${ctx.from.first_name || '未知'})`);
+        } else {
+            ctx.reply('你已經在訂閱名單中囉，無需重複驗證！');
+        }
+    } catch (err) {
+        console.error('處理訂閱存檔失敗:', err);
+        ctx.reply('❌ 系統處理訂閱時發生錯誤，請稍後再試。');
+    }
+});
+
+// 啟動機器人監聽 (背景執行)
+bot.launch().then(() => {
+    console.log('🤖 Telegram 機器人監聽服務已啟動');
+});
+
+// ==========================================
+// 2. 爬蟲監控任務邏輯
+// ==========================================
 async function monitorTask() {
     console.log(`[${new Date().toLocaleString()}] 🔍 啟動網頁掃描...`);
-    console.log(`🌍 執行環境: ${config.env.toUpperCase()}`); // 會顯示 DEVELOPMENT 或 PRODUCTION
+    console.log(`🌍 執行環境: ${config.env.toUpperCase()}`);
     console.log(`⏰ 排程頻率: ${config.cronSchedule}`);
     console.log(`🎯 目標網址: ${config.targetUrl}`);
     let worker = null;
@@ -79,3 +127,7 @@ async function monitorTask() {
 
 cron.schedule(config.cronSchedule, monitorTask);
 monitorTask();
+
+// 優雅停機處理 (PM2 停止時會觸發)
+process.once('SIGINT', () => bot.stop('SIGINT'));
+process.once('SIGTERM', () => bot.stop('SIGTERM'));
