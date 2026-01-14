@@ -1,0 +1,42 @@
+name: Node.js CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20.x] # 建議使用最新的 LTS 版本
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm' # 自動快取 node_modules 縮短執行時間
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Security Audit
+      run: npm audit --audit-level=high
+
+    - name: Run Unit Tests
+      # 在這裡填入測試時需要的 dummy 變數，避免 config.js 報警
+      env:
+        NODE_ENV: test
+        TARGET_URL: "https://example.com"
+        TG_TOKEN: "dummy_tg_token"
+        TG_CHAT_ID: "dummy_chat_id"
+        LINE_ACCESS_TOKEN: "dummy_line_token"
+        LINE_USER_ID: "dummy_line_id"
+      run: npm test
