@@ -2,7 +2,6 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const fs = require('fs-extra');
 const cron = require('node-cron');
-const path = require('path');
 const { createWorker } = require('tesseract.js'); // 新增引用
 
 const config = require('./config');
@@ -15,6 +14,9 @@ fs.ensureDirSync(config.imageDir);
 
 async function monitorTask() {
     console.log(`[${new Date().toLocaleString()}] 🔍 啟動網頁掃描...`);
+    console.log(`🌍 執行環境: ${config.env.toUpperCase()}`); // 會顯示 DEVELOPMENT 或 PRODUCTION
+    console.log(`⏰ 排程頻率: ${config.cronSchedule}`);
+    console.log(`🎯 目標網址: ${config.targetUrl}`);
     let worker = null;
 
     try {
