@@ -1,6 +1,11 @@
 require('dotenv').config();
 
+const env = process.env.NODE_ENV || 'development';
+
 const config = {
+    env,
+    isProd: env === 'production',
+    isDev: env === 'development',
     targetUrl: process.env.TARGET_URL,
     hashFile: './last_hash.txt',
     imageDir: './downloads',

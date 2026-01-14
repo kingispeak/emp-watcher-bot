@@ -79,11 +79,17 @@ async function sendToLine(message) {
 async function broadcast(message) {
     const chunks = splitMessage(message);
     for (const chunk of chunks) {
-        await Promise.allSettled([
-            sendToTelegram(chunk),
-            sendToLine(chunk)
-        ]);
-    }
+        if (config.isProd) {
+            await Promise.allSettled([
+                sendToTelegram(chunk),
+                sendToLine(chunk)
+            ]);
+        } else {
+            console.log(`🧪 [開發模式] 攔截通知，僅列印長度: ${chunk.length}`);
+            // 開發模式下可能只發給 TG 方便測試，但不發給 LINE
+            // await sendToTelegram(chunk); 
+        }
+    }    
 }
 
 module.exports = { broadcast, splitMessage };

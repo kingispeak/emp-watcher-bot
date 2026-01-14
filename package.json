@@ -1,22 +1,33 @@
 {
   "name": "emp-watcher-bot",
   "version": "1.0.0",
-  "description": "",
+  "description": "Automated web monitoring and OCR notification bot",
   "main": "index.js",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
-    "dev": "node index.js",
+    "dev": "NODE_ENV=development node index.js",
     "test": "jest",
     "test:watch": "jest --watch",
-    "start": "pm2 start ecosystem.config.js",
+    "start": "pm2 start ecosystem.config.js --env production",
     "stop": "pm2 stop ecosystem.config.js",
-    "restart": "pm2 restart ecosystem.config.js",
-    "reload": "pm2 reload ecosystem.config.js",
+    "restart": "pm2 restart ecosystem.config.js --env production",
+    "reload": "pm2 reload ecosystem.config.js --env production",
     "delete": "pm2 delete ecosystem.config.js",
+    "pm2:kill": "pm2 kill",
     "status": "pm2 status",
     "logs": "pm2 logs",
-    "clean": "rm -rf ./downloads/*.png && rm -rf ./logs/*.log && rm -rf ./last_hash.txt"
+    "clean": "rm -rf ./downloads/*.png ./logs/*.log last_hash.txt",
+    "remote-deploy": "ssh xinya 'cd /var/www/emp-watcher-bot && ./deploy.sh'"
   },
-  "keywords": [],
+  "keywords": [
+    "monitoring",
+    "ocr",
+    "tesseract",
+    "telegram",
+    "line"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
