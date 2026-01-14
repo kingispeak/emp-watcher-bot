@@ -35,20 +35,27 @@ bot.start(async (ctx) => {
     try {
         let users = [];
         if (await fs.exists(config.usersFile)) {
-            users = await fs.readJson(config.usersFile);
+            try {
+                users = await fs.readJson(config.usersFile);
+            } catch (parseError) {
+                // 如果檔案損壞或空白，重置為空陣列
+                console.warn('⚠️ users.json 格式錯誤，已重置為空陣列');
+                users = [];
+            }
         }
+
+        if (!Array.isArray(users)) users = []; // 確保 users 一定是陣列
 
         if (!users.includes(chatId)) {
             users.push(chatId);
             await fs.writeJson(config.usersFile, users);
-            ctx.reply('🎉 驗證成功！你已加入訂閱名單，當有名單更新時我會第一時間通知你。');
-            console.log(`👤 新訂閱者已加入: ${chatId} (${ctx.from.first_name || '未知'})`);
+            ctx.reply('🎉 驗證成功！你已加入訂閱名單。');
         } else {
-            ctx.reply('你已經在訂閱名單中囉，無需重複驗證！');
+            ctx.reply('你已經在訂閱名單中囉！');
         }
     } catch (err) {
         console.error('處理訂閱存檔失敗:', err);
-        ctx.reply('❌ 系統處理訂閱時發生錯誤，請稍後再試。');
+        ctx.reply('❌ 系統錯誤，請聯絡管理員。');
     }
 });
 

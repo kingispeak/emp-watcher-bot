@@ -9,13 +9,14 @@ const config = require('./config');
 async function getSubscribers() {
     try {
         if (await fs.exists(config.usersFile)) {
-            const users = await fs.readJson(config.usersFile);
-            // 確保回傳的是陣列，且包含 config.tgChatId (避免管理員漏掉)
-            if (Array.isArray(users)) {
-                if (!users.includes(config.tgChatId)) {
-                    users.push(config.tgChatId);
+            try {
+                const users = await fs.readJson(config.usersFile);
+                if (Array.isArray(users)) {
+                    if (!users.includes(config.tgChatId)) users.push(config.tgChatId);
+                    return users;
                 }
-                return users;
+            } catch (e) {
+                console.error('⚠️ users.json 解析失敗，改用預設 ID');
             }
         }
     } catch (err) {
