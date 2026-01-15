@@ -1,8 +1,8 @@
 # EMP Watcher Bot 🚀
 
-[![Node.js CI](https://github.com/kingispeak/emp-watcher-bot/actions/workflows/node.js.yml/badge.svg)](https://github.com/kingispeak/emp-watcher-bot/actions/workflows/node.js.yml)
+[![Node.js CI](https://github.com/kingispeak/emp-watcher-bot/actions/workflows/ci.yml/badge.svg)](https://github.com/kingispeak/emp-watcher-bot/actions/workflows/ci.yml)
 
-這是一個基於 Node.js 開發的自動化網頁監控工具。它能定時掃描目標網頁的名單圖片，當偵測到變動時，透過 **Sharp** 強化影像品質，並使用 **Tesseract.js** 進行 OCR 文字辨識，最後將結果推送到 **Telegram** 與 **LINE**。
+這是一個基於 Node.js 開發的自動化網頁監控工具。它能定時掃描目標網頁的名單圖片，當偵測到變動時，透過 **Sharp** 強化影像品質，並使用 **Tesseract.js** 進行 OCR 文字辨識，最後將結果推送到 **Telegram** 與 **LINE**，**Telegram Bot** 整合了訂閱制廣播系統與密碼授權機制。
 
 ---
 
@@ -33,7 +33,7 @@
 ## 🚀 快速開始
 
 ### 1. 安裝環境
-確保你的環境已安裝 Node.js (v18+) 與 npm。
+確保你的環境已安裝 Node.js (>=20) 與 npm。
 
 ```bash
 # 下載專案
@@ -54,7 +54,8 @@ CRON_SCHEDULE="*/10 * * * *"
 
 # Telegram
 TG_TOKEN=your_bot_token
-TG_CHAT_ID=your_chat_id
+TG_CHAT_ID=your_chat_id # admin chat id
+SUBSCRIBE_PASSWORD=your_secure_password # 訂閱授權密碼
 
 # LINE
 LINE_ACCESS_TOKEN=your_channel_access_token
@@ -71,6 +72,10 @@ LINE_USER_ID=your_user_id
 - `npm run restart` 重新啟動服務
 - `npm run stop` 停止 PM2 服務
 - `npm run delete` 從 PM2 清單中移除專案
+- `npm run remote-deploy` 遠端伺服器部署 (需先設定 SSH)
+- `./deploy.sh`	伺服器一鍵部署 (Pull + Install + Restart)
+
+更多請參考 package.json 的 scripts 指令。
 
 ### 4. 專案結構
 
@@ -101,3 +106,13 @@ npm test
 - 二值化閾值：若 OCR 辨識結果不理想（字太細或太粗），請調整 `utils.js` 中的 `.threshold(160)`，數值範圍為 0-255。
 - 記憶體管理：由於 OCR 辨識較耗 CPU 與記憶體，PM2 設定檔中已加入 `max_memory_restart: '300M'` 以確保系統穩定。
 - 訊息切分：`notifier.js` 已內建自動切分邏輯，若辨識文字過長會拆分成多則訊息發送，避免觸發平台 API 的長度限制。
+
+### 7.Telegram 訂閱方式
+
+機器人具備身分驗證功能，使用者需透過以下方式完成訂閱：
+
+手動訂閱：在對話框輸入 /start [密碼]（例如：/start 123456）。
+自動連結：分享連結 https://t.me/YourBotName?start=密碼，使用者點擊「開始」即可自動完成驗證。
+安全性與隱私：users.json 會記錄訂閱者的 Telegram ID，請勿將其上傳至公開倉庫。
+
+註：訂閱名單儲存於 `users.json`，系統具備自動修復功能，若檔案損壞會自動重建。
