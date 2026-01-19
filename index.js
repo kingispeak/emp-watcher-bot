@@ -82,7 +82,9 @@ async function monitorTask() {
         const imgElements = $('.product-tab-content img');
         
         if (imgElements.length === 0) {
-            console.warn('⚠️ 找不到目標圖片。');
+            const warningMsg = '⚠️ 監控異常：找不到目標圖片，網站結構可能已變更。';
+            console.warn(warningMsg);
+            await broadcast(warningMsg);
             return;
         }
 
@@ -110,7 +112,7 @@ async function monitorTask() {
             await fs.writeFile(config.hashFile, combinedHash);
 
             // 在此初始化一次 Worker
-            worker = await createWorker('chi_tra');
+            worker = await createWorker('chi_tra+eng');
 
             let finalReport = `📢 【名單更新】\n時間：${new Date().toLocaleString()}\n\n`;
             

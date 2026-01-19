@@ -15,7 +15,8 @@ const preprocessImage = async (buffer) => {
     return await sharp(buffer)
         .resize({ width: 2500, withoutEnlargement: false })
         .grayscale()
-        .threshold(160)
+        .normalise()
+        .sharpen()
         .toBuffer();
 };
 
@@ -26,7 +27,7 @@ const cleanOCRText = (text) => {
     if (!text) return '';
     return text.split('\n')
         .map(line => line.trim())
-        .filter(line => line.length > 1)
+        .filter(line => line.length > 0)
         .join('\n');
 };
 
