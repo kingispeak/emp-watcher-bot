@@ -9,10 +9,11 @@
 ## 🌟 核心功能
 
 - **自動監控**：使用 `node-cron` 實現定時抓取（預設每 10 分鐘）。
-- **變動偵測**：透過 MD5 Hash 比對圖片內容，僅在內容更新時觸發辨識。
-- **影像強化**：利用 `sharp` 進行二值化、灰階及放大處理，大幅提升文字辨識準確度。
-- **OCR 辨識**：自動辨識圖片內的繁體中文名單。
-- **多平台通知**：整合 Telegram Bot API 與 LINE Messaging API (直接透過 Axios 調用)。
+- **變動偵測**：透過 MD5 Hash 比對圖片內容，並加入 **URL 防快取機制**（Cache Busting），確保抓取最新狀態。
+- **影像強化**：利用 `sharp` 進行自動對比度增強 (`normalise`)、銳化 (`sharpen`) 及灰階處理，大幅提升文字辨識準確度。
+- **OCR 辨識**：支援 **繁體中文 (chi_tra)** 與 **英文 (eng)** 混合辨識。
+- **異常告警**：若監控目標結構變更（如找不到圖片），將自動發送異常通知。
+- **多平台通知**：整合 Telegram Bot API 與 LINE Messaging API。
 - **穩健運行**：搭配 PM2 進行行程管理，支援當機自動重啟與日誌紀錄。
 - **品質保證**：內建 Jest 單元測試與 GitHub Actions CI 流程。
 
@@ -20,13 +21,12 @@
 
 ## 🛠 技術棧
 
-- **Runtime**: Node.js
+- **Runtime**: Node.js (>=20)
 - **Scraping**: Axios, Cheerio
 - **Image Process**: Sharp
-- **OCR Engine**: Tesseract.js
+- **OCR Engine**: Tesseract.js (Multi-language support)
 - **Process Manager**: PM2
 - **Testing**: Jest
-- **CI/CD**: GitHub Actions
 
 ---
 
@@ -80,7 +80,7 @@ LINE_USER_ID=your_user_id
 ### 4. 專案結構
 
 ```
-├── __tests__/           # 單元測試案例 (Jest)
+├── tests/               # 單元測試案例 (Jest)
 ├── downloads/           # 暫存原始圖片與處理後的圖片 (已由 git 忽略)
 ├── logs/                # PM2 運行日誌檔案 (已由 git 忽略)
 ├── .env                 # 敏感環境變數 (已由 git 忽略)
@@ -90,7 +90,8 @@ LINE_USER_ID=your_user_id
 ├── notifier.js          # Telegram 與 LINE API 發送邏輯
 ├── index.js             # 程式主入口：負責排程與監控流程
 ├── ecosystem.config.js  # PM2 設定檔
-└── last_hash.txt        # 紀錄上次比對的圖片 Hash
+├── last_hash.txt        # 紀錄上次比對的圖片 Hash
+└── users.json           # 紀錄 Telegram 訂閱者名單
 ```
 
 ### 5. 自動化測試與 CI
@@ -103,9 +104,10 @@ npm test
 
 ### 6. 維護與調優
 
-- 二值化閾值：若 OCR 辨識結果不理想（字太細或太粗），請調整 `utils.js` 中的 `.threshold(160)`，數值範圍為 0-255。
-- 記憶體管理：由於 OCR 辨識較耗 CPU 與記憶體，PM2 設定檔中已加入 `max_memory_restart: '300M'` 以確保系統穩定。
-- 訊息切分：`notifier.js` 已內建自動切分邏輯，若辨識文字過長會拆分成多則訊息發送，避免觸發平台 API 的長度限制。
+- **辨識率優化**：系統已採用自動對比度增強 (`normalise`) 與銳化 (`sharpen`)。若文字依然模糊，可嘗試在 `utils.js` 中調整 `.resize({ width: 2500 })` 的寬度參數。
+- **異常監控**：若收到「⚠️ 監控異常」通知，通常代表目標網址的 CSS Selector (`.product-tab-content img`) 已失效，請更新 `index.js` 中的爬蟲邏輯。
+- **記憶體管理**：由於 OCR 辨識較耗 CPU 與記憶體，PM2 設定檔中已加入 `max_memory_restart: '300M'` 以確保系統穩定。
+- **訊息切分**：`notifier.js` 已內建自動切分邏輯，若辨識文字過長會拆分成多則訊息發送。
 
 ### 7.Telegram 訂閱方式
 
