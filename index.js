@@ -93,8 +93,22 @@ async function monitorTask() {
         for (let i = 0; i < imgElements.length; i++) {
             try {
                 const relSrc = $(imgElements[i]).attr('src');
-                const imgUrl = new URL(relSrc, config.targetUrl).href;
-                const res = await apiClient.get(imgUrl, { responseType: 'arraybuffer' });
+                const imgUrlObj = new URL(relSrc, config.targetUrl);
+                
+                // 🛑 防快取機制：加上時間戳記，強制 CDN/Server 回傳最新檔案
+                imgUrlObj.searchParams.append('_t', Date.now());
+                const imgUrl = imgUrlObj.href;
+
+                // console.log(`DEBUG: 下載圖片 URL: ${imgUrl}`); // 除錯用
+
+                const res = await apiClient.get(imgUrl, { 
+                    responseType: 'arraybuffer',
+                    headers: {
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache',
+                        'Expires': '0'
+                    }
+                });
                 const buffer = Buffer.from(res.data);
                 imageInfos.push({ index: i + 1, buffer, hash: getHash(buffer) });
             } catch (e) {
