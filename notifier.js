@@ -12,8 +12,12 @@ async function getSubscribers() {
             try {
                 const users = await fs.readJson(config.usersFile);
                 if (Array.isArray(users)) {
-                    if (!users.includes(config.tgChatId)) users.push(config.tgChatId);
-                    return users;
+                    // 使用 Set 來自動處理重複 ID，並統一轉換成字串以避免型別問題
+                    const subscriberSet = new Set(users.map(String));
+                    if (config.tgChatId) {
+                        subscriberSet.add(String(config.tgChatId));
+                    }
+                    return [...subscriberSet];
                 }
             } catch (e) {
                 console.error('⚠️ users.json 解析失敗，改用預設 ID');
@@ -22,7 +26,9 @@ async function getSubscribers() {
     } catch (err) {
         console.error('讀取訂閱清單失敗:', err);
     }
-    return [config.tgChatId]; // 保底方案：發送給管理員
+    
+    // 保底方案：僅發送給管理員
+    return config.tgChatId ? [String(config.tgChatId)] : [];
 }
 
 /**
