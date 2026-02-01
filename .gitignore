@@ -5,4 +5,4 @@ users.json
 *.jpg
 logs/
 .env
-.traineddata
+*.traineddata
