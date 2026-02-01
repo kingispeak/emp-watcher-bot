@@ -111,7 +111,16 @@ async function sendToLine(message) {
 }
 
 async function broadcast(message) {
-    const chunks = splitMessage(message);
+    // 組合增強後的訊息
+    const enhancedMessage = `
+${message}
+
+---
+資料來源: ${config.targetUrl}
+溫馨提醒：圖片內容由 OCR 技術自動辨識，可能存在部分誤差。
+    `.trim();
+
+    const chunks = splitMessage(enhancedMessage);
     for (const chunk of chunks) {
         if (config.isProd) {
             await Promise.allSettled([
@@ -119,7 +128,7 @@ async function broadcast(message) {
                 sendToLine(chunk)
             ]);
         } else {
-            console.log(`🧪 [開發模式] 攔截通知，僅列印長度: ${chunk.length}`);
+            console.log(`🧪 [開發模式] 攔截通知:\n${chunk}`);
             // 開發模式下可能只發給 TG 方便測試，但不發給 LINE
             // await sendToTelegram(chunk); 
         }
