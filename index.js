@@ -125,8 +125,7 @@ async function monitorTask() {
             console.log('🚀 偵測到內容變動！啟動辨識...');
             await fs.writeFile(config.hashFile, combinedHash);
 
-            // 在此初始化一次 Worker
-            worker = await createWorker('chi_tra+eng');
+            worker = await createWorker('chi_tra');
 
             let finalReport = `📢 【名單更新】\n時間：${new Date().toLocaleString()}\n\n`;
             
